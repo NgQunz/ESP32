@@ -1,0 +1,22 @@
+{
+    "authors": {
+        "name": "Justin Howard",
+        "url": "https://os.mbed.com/users/vtraveller/"
+    },
+    "build": {
+        "builder": "MbedLibBuilder"
+    },
+    "description": "Support for the AdaFruit_RGBLCDShield. Uses MCP23017 for control of the port expander. Code intentionally kept as close to the Arduino code released by AdaFruit to make updates easier.",
+    "examples": [
+        "https://os.mbed.com/users/vtraveller/code/AdaFruit_RGBLCD/"
+    ],
+    "frameworks": "mbed",
+    "keywords": [],
+    "name": "AdaFruit_RGBLCDShield",
+    "platforms": "*",
+    "repository": {
+        "type": "hg",
+        "url": "https://os.mbed.com/users/vtraveller/code/AdaFruit_RGBLCDShield/"
+    },
+    "version": "0.0.0+sha.01f8491ca9a5"
+}

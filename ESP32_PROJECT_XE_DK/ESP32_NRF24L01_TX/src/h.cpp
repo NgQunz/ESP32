@@ -1,0 +1,10 @@
+digitalWrite(LED[i],1);
+    digitalWrite(LED[i+1],1);
+    digitalWrite(LED[i+1+1],1);
+    digitalWrite(LED[i+1+1+1],1);
+    delay(300); 
+    digitalWrite(LED[i],0);
+    digitalWrite(LED[i+1],0);
+    digitalWrite(LED[i+1+1],0);
+     digitalWrite(LED[i+1+1+1],0);
+    delay(300);
