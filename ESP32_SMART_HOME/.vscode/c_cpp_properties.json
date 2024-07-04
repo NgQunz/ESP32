@@ -1,7 +1,7 @@
 {
   "configurations": [
     {
-      "name": "windows-gcc-x86",
+      "name": "windows-gcc-x64",
       "includePath": [
         "${workspaceFolder}/**",
         "d:/ESP32/ESP32_SMART_HOME/include",
@@ -509,7 +509,7 @@
         "-mlongcalls",
         ""
       ],
-      "intelliSenseMode": "windows-gcc-x86"
+      "intelliSenseMode": "windows-gcc-x64"
     }
   ],
   "version": 4
