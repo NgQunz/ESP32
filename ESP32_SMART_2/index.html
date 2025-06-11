@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real-Time Monitoring</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      transition: background-color 0.5s ease;
+    }
+    .alertText {
+      text-align: center;
+      color: red;
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 5px 0;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">Real-Time Temperature, Humidity & Gas Monitoring</h1>
+  <div id="alertTempLow" class="alertText"></div>
+  <div id="alertTempHigh" class="alertText"></div>
+  <div id="alertHumiLow" class="alertText"></div>
+  <div id="alertHumiHigh" class="alertText"></div>
+  <div id="alertGas" class="alertText"></div>
+
+  <div style="width: 80%; margin: 20px auto;">
+    <canvas id="sensorChart"></canvas>
+  </div>
+  <p style="text-align: center;">
+    Data updates automatically from 
+    <a href="http://192.168.1.124/ESP32_SMART_2/getdata.php" target="_blank">getdata.php</a>
+  </p>
+
+  <audio id="alertSound" src="beep_07.wav" preload="auto"></audio>
+
+  <script>
+    const maxPoints = 20;
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+    const alertSound = document.getElementById('alertSound');
+
+    const alertTempLow = document.getElementById('alertTempLow');
+    const alertTempHigh = document.getElementById('alertTempHigh');
+    const alertHumiLow = document.getElementById('alertHumiLow');
+    const alertHumiHigh = document.getElementById('alertHumiHigh');
+    const alertGas = document.getElementById('alertGas');
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Temperature (°C)',
+            data: [],
+            borderColor: 'rgba(0, 128, 0, 1)',
+            backgroundColor: 'rgba(0, 128, 0, 0.2)',
+            fill: true,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Humidity (%)',
+            data: [],
+            borderColor: 'rgba(0, 123, 255, 1)',
+            backgroundColor: 'rgba(0, 123, 255, 0.2)',
+            fill: true,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Gas (PPM)',
+            data: [],
+            borderColor: 'rgba(255, 165, 0, 1)',
+            backgroundColor: 'rgba(255, 165, 0, 0.2)',
+            fill: true,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Nhiệt độ / Độ ẩm'
+            }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Khí gas (PPM)'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    });
+
+    let isPlaying = false;
+
+    function playAlertFor5s() {
+      if (isPlaying) return;
+      isPlaying = true;
+      alertSound.loop = true;
+      alertSound.play();
+      setTimeout(() => {
+        alertSound.pause();
+        alertSound.currentTime = 0;
+        isPlaying = false;
+      }, 5000);
+    }
+
+    function showOrHideAlert(element, condition, message) {
+      if (condition) {
+        element.innerText = message;
+        element.style.display = 'block';
+        return true;
+      } else {
+        element.style.display = 'none';
+        return false;
+      }
+    }
+
+    const updateChart = () => {
+      fetch('getdata.php')
+        .then(response => response.json())
+        .then(data => {
+          const last = data[data.length - 1];
+          const datetime = last.datetime;
+          const temp = last.tempc;
+          const humi = last.humi;
+          const ppm = last.ppm;
+
+          let alertTriggered = false;
+
+          alertTriggered |= showOrHideAlert(alertTempLow, temp < 10, `⚠️ Cảnh báo: Nhiệt độ quá thấp (${temp}°C)`);
+          alertTriggered |= showOrHideAlert(alertTempHigh, temp > 35, `⚠️ Cảnh báo: Nhiệt độ quá cao (${temp}°C)`);
+          alertTriggered |= showOrHideAlert(alertHumiLow, humi < 30, `⚠️ Cảnh báo: Độ ẩm quá thấp (${humi}%)`);
+          alertTriggered |= showOrHideAlert(alertHumiHigh, humi > 85, `⚠️ Cảnh báo: Độ ẩm quá cao (${humi}%)`);
+          alertTriggered |= showOrHideAlert(alertGas, ppm > 300, `⚠️ Cảnh báo: Nồng độ khí gas cao (${ppm} ppm)`);
+
+          if (alertTriggered) {
+            playAlertFor5s();
+            document.body.style.backgroundColor = '#ffe6e6'; // màu đỏ nhạt
+          } else {
+            document.body.style.backgroundColor = 'white';
+          }
+
+          if (!chart.data.labels.includes(datetime)) {
+            chart.data.labels.push(datetime);
+            chart.data.datasets[0].data.push(temp);
+            chart.data.datasets[1].data.push(humi);
+            chart.data.datasets[2].data.push(ppm);
+
+            if (chart.data.labels.length > maxPoints) {
+              chart.data.labels.shift();
+              chart.data.datasets.forEach(ds => ds.data.shift());
+            }
+
+            chart.update();
+          }
+        })
+        .catch(error => console.error('Fetch error:', error));
+    };
+
+    updateChart();
+    setInterval(updateChart, 5000);
+  </script>
+</body>
+</html>

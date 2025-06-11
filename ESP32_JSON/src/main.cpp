@@ -1,247 +1,235 @@
-
-// #include <ArduinoJson.h>
-// #include <PubSubClient.h>
-// #include <WiFi.h>
-// #include <NTPClient.h>
-// #include <WiFiUdp.h>
-// #include <Wire.h>
-// WiFiClient espClient;
-// PubSubClient client(espClient);
-
-// const char* ssid = "ESP32";
-// const char* password = "12345678";
-// const char *mqtt_broker = "broker.mqttdashboard.com";
-// const int mqtt_port = 1883;
-// const char *topic_pub = "Esp32/Mqtt";
-// const char *topic_sub = "Mqtt/Esp32";
-// const char *mqtt_username = "Demo";
-// const char *mqtt_password = "public";
-
-// DynamicJsonDocument data(1024);
-// char Buffer[1000];
-// void MQTT_Connect();
-// void MQTT_Pub_Sub();
-// //void callback(char *topic, byte *payload, unsigned int length) ;
-// void Data_to_Json(String js_temp, String js_humi, String js_soil);
-// void Detext(String Str);
-// hw_timer_t *Timer0_Cfg = NULL;
-// volatile uint8_t flag_stt = 0;
-
-// void IRAM_ATTR MQTT() {
-//   flag_stt = 0;
-// }
-// void setup() {
-//   Serial.begin(9600);
-//   WiFi.begin(ssid, password);
-//   while (WiFi.status() != WL_CONNECTED) {
-//     delay(1000);
-//     Serial.println("Connecting to WiFi...");
-//   }
-//   Serial.println("Connected to WiFi");
-//   MQTT_Connect();
-//   Serial.begin(115200);
-//   Timer0_Cfg = timerBegin(0, 8000, true);
-//   timerAttachInterrupt(Timer0_Cfg, &MQTT, true);
-//   timerAlarmWrite(Timer0_Cfg, 5000, true);
-//   timerAlarmEnable(Timer0_Cfg);
-// }
-// String temperature = "25";
-//     String humidity = "60";
-//     String soilMoisture = "35";
-// void loop() {
-//   client.loop();
-//   if (flag_stt) {
-//     Data_to_Json(temperature, humidity, soilMoisture);
-//     client.publish(topic_pub, Buffer);
-//     flag_stt = 0;
-//   }
-
-// }
-
-// void MQTT_Connect() {
-//   client.setServer(mqtt_broker, mqtt_port);
-//   //client.setCallback(callback);
-
-//   while (!client.connected()) {
-//     String client_id = "esp32-client-";
-//     client_id += String(WiFi.macAddress());
-//     Serial.printf("The client %s connects to the public mqtt broker\n", client_id.c_str());
-//     if (client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
-//       Serial.println("Public emqx mqtt broker connected");
-//       MQTT_Pub_Sub();
-//     } else {
-//       Serial.print("failed with state ");
-//       Serial.print(client.state());
-//       delay(2000);
-//     }
-//   }
-// }
-
-// void MQTT_Pub_Sub() {
-//   client.subscribe(topic_sub);
-// }
-
-// void Data_to_Json(String js_temp, String js_humi, String js_soil) {
-//   data.clear();
-//   data["temp"] = js_temp;
-//   data["humi"] = js_humi;
-//   data["soil"] = js_soil;
-// }
-// void Detext(String Str) {
-//   deserializeJson(data, Str);
-//   String sTemp = data["temp"].as<String>();
-//   String sHumi = data["humi"].as<String>();
-//   String sSoil = data["soil"].as<String>();
-//   int val_Temp = sTemp.toInt();
-//   int val_Humi = sHumi.toInt();
-//   int val_Soil = sSoil.toInt();
-//   Serial.println("Humi: " + String(val_Temp));
-//   Serial.println("Temp: " + String(val_Humi));
-//   Serial.println("Soil: " + String(val_Soil));
-// }
-#include <ArduinoJson.h>
-#include <PubSubClient.h>
 #include <WiFi.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+#include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
+#include <DHT.h>
 #include <Wire.h>
-WiFiClient espClient;
-PubSubClient client(espClient);
+#include "RTClib.h"
+#include <HardwareSerial.h>
+#include <DFRobotDFPlayerMini.h>
 
-const char *ssid = "ESP32";
-const char *password = "12345678";
-const char *mqtt_broker = "broker.mqttdashboard.com";
-const int mqtt_port = 1883;
-const char *topic_pub = "Esp/Mqt";
-const char *topic_sub = "Mqt/Esp";
-const char *mqtt_username = "Quan";
-const char *mqtt_password = "Nquan";
+HardwareSerial dfSerial(1); // UART1 (RX=16, TX=17)
+DFRobotDFPlayerMini dfPlayer;
 
-DynamicJsonDocument data(1024);
-char Buffer[1000];
-void MQTT_Connect();
-void MQTT_Pub_Sub();
-void callback(char *topic, byte *payload, unsigned int length);
-void Data_to_Json(String js_temp, String js_humi, String js_soil);
-void Detext(String Str);
-void To_mqtt_browser();
-hw_timer_t *Timer0_Cfg = NULL;
-uint8_t flag_stt = 0;
-int count=0;
+// DS3231 RTC
+RTC_DS1307 rtc;
 
-void IRAM_ATTR MQTT()
-{
-  flag_stt = 1;
-}
+// HC12
+HardwareSerial hc12(2); // UART2 (RX2: 27, TX2: 26)
+
+// WiFi Info
+const char *ssid = "102 Mini";
+const char *password = "khongchopass";
+
+// Relay pins
+#define RELAY4 23 // dao chieu
+#define RELAY1 18 // so 1
+#define RELAY2 19 // so 22
+#define RELAY3 21 // so 33
+
+// DHT22 sensor
+#define DHTPIN 15
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+#define RESET_PIN 4
+
+unsigned long lastDHTRead = 0;
+const unsigned long dhtInterval = 2000;
+unsigned long lastHelloTime = 0;           // Thời gian nhận lệnh "hello" cuối cùng
+const unsigned long helloTimeout = 300000; // 15 phút = 900000 ms
+
+AsyncWebServer server(80);
+bool ready = false;
+
 void setup()
 {
-  Serial.begin(9600);
-  // Timer0_Cfg = timerBegin(0, 8000, true);
-  // timerAttachInterrupt(Timer0_Cfg, &MQTT, true);
-  // timerAlarmWrite(Timer0_Cfg, 50000 , true);
-  // timerAlarmEnable(Timer0_Cfg);
+  Serial.begin(115200);
+  dht.begin();
+
+  IPAddress local_IP(192, 168, 1, 100); // Địa chỉ IP tĩnh
+  IPAddress gateway(192, 168, 1, 1);    // Gateway
+  IPAddress subnet(255, 255, 255, 0);   // Subnet mask
+  IPAddress primaryDNS(8, 8, 8, 8);     // DNS chính (Google)
+  IPAddress secondaryDNS(8, 8, 4, 4);   // DNS phụ (Google)
+
+  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS))
+  {
+    Serial.println("Cấu hình IP tĩnh thất bại");
+  }
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
+    delay(500);
+    Serial.println("Wifi connecting...");
   }
-  Serial.println("Connected to WiFi");
-  MQTT_Connect();
-  Timer0_Cfg = timerBegin(0, 8000, true);
-  timerAttachInterrupt(Timer0_Cfg, &MQTT, true);
-  timerAlarmWrite(Timer0_Cfg, 1000, true);
-  timerAlarmEnable(Timer0_Cfg);
+  Serial.println("\nWiFi connected! IP: ");
+  Serial.println(WiFi.localIP());
+
+  pinMode(RESET_PIN, INPUT_PULLUP);
+  pinMode(RELAY1, OUTPUT);
+  pinMode(RELAY2, OUTPUT);
+  pinMode(RELAY3, OUTPUT);
+  pinMode(RELAY4, OUTPUT);
+
+  digitalWrite(RELAY1, LOW);
+  digitalWrite(RELAY2, LOW);
+  digitalWrite(RELAY3, LOW);
+  digitalWrite(RELAY4, LOW);
+
+  Wire.begin(32, 33); // SDA, SCL
+
+  if (!rtc.begin())
+  {
+    Serial.println("Không tìm thấy DS3231");
+    while (1)
+      ;
+  }
+
+  if (!rtc.isrunning())
+  {
+    Serial.println("DS3231 mất nguồn, thiết lập lại thời gian!");
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+
+  dfSerial.begin(9600, SERIAL_8N1, 16, 17); // RX=16, TX=17
+  if (!dfPlayer.begin(dfSerial))
+  {
+    Serial.println("Không tìm thấy DFPlayer Mini!");
+  }
+  else
+  {
+    Serial.println("DFPlayer Mini sẵn sàng.");
+    dfPlayer.volume(30); // Âm lượng từ 0 - 30
+  }
+
+  hc12.begin(9600, SERIAL_8N1, 27, 26); // RX, TX
+
+  server.on("/relay", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+            {
+              DynamicJsonDocument doc(1024);
+              DeserializationError error = deserializeJson(doc, data);
+              if (error) {
+                request->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+                return;
+              }
+
+              String cmd = doc["command"];
+              Serial.println("Received: " + cmd);
+
+              // Kiểm tra thời gian hết hạn của "hello"
+              if (ready && (millis() - lastHelloTime > helloTimeout)) {
+                ready = false;
+                Serial.println("Hết hạn 15 phút, cần gửi lại 'hello'");
+              }
+
+              if (cmd == "hello") {
+                ready = true;
+                lastHelloTime = millis(); // Cập nhật thời gian nhận "hello"
+                dfPlayer.play(1);
+                request->send(200, "application/json", "{\"status\":\"ESP32 ready\"}");
+                return;
+              }
+
+              if (!ready) {
+                request->send(403, "application/json", "{\"error\":\"Not initialized. Send 'hello' first.\"}");
+                return;
+              }
+
+              if (cmd == "tat_quat") {
+                digitalWrite(RELAY1, LOW);
+                digitalWrite(RELAY2, LOW);
+                digitalWrite(RELAY3, LOW);
+                digitalWrite(RELAY4, LOW);
+                dfPlayer.play(7);
+              } else if (cmd == "nac_1") {
+                digitalWrite(RELAY1, HIGH);
+                digitalWrite(RELAY2, LOW);
+                digitalWrite(RELAY3, LOW);
+                dfPlayer.play(2);
+              } else if (cmd == "nac_2") {
+                digitalWrite(RELAY2, HIGH);
+                digitalWrite(RELAY1, LOW);
+                digitalWrite(RELAY3, LOW);
+                dfPlayer.play(3);
+              } else if (cmd == "nac_3") {
+                digitalWrite(RELAY3, HIGH);
+                digitalWrite(RELAY1, LOW);
+                digitalWrite(RELAY2, LOW);
+                dfPlayer.play(4);
+              } else if (cmd == "quat_xoay") {
+                digitalWrite(RELAY4, HIGH);
+                dfPlayer.play(5);
+              } else if (cmd == "tat_xoay") {
+                digitalWrite(RELAY4, LOW);
+                dfPlayer.play(6);
+              } else if (cmd == "bat_den_1" || cmd == "bat_den_2" || cmd == "bat_den_3") {
+                hc12.println(cmd);
+                if (cmd== "bat_den_1") {
+                  dfPlayer.play();
+                } else if (cmd == "bat_den_2") {
+                  dfPlayer.play();
+                } else if (cmd == "bat_den_3") {
+                  dfPlayer.play(8);
+                }
+              } else if (cmd == "tat_den_1" || cmd == "tat_den_2" || cmd == "tat_den_3") {
+                hc12.println(cmd);
+                if (cmd == "tat_den_1") {
+                  dfPlayer.play();
+                } else if (cmd == "tat_den_2") {
+                  dfPlayer.play();
+                } else if (cmd == "tat_den_3") {
+                  dfPlayer.play(9);
+                }
+              }
+               else {
+                request->send(400, "application/json", "{\"error\":\"Unknown command\"}");
+                return;
+              }
+              request->send(200, "application/json", "{\"status\":\"OK\"}"); });
+
+  server.begin();
 }
+
 void loop()
 {
-  client.loop();
-  if (flag_stt)
+  if (digitalRead(RESET_PIN) == LOW)
   {
-    count++;
-    MQTT_Pub_Sub();
-    flag_stt = 0;
+    Serial.println("Đã nhấn nút reset!");
+    digitalWrite(RELAY1, LOW);
+    digitalWrite(RELAY2, LOW);
+    digitalWrite(RELAY3, LOW);
+    digitalWrite(RELAY4, LOW);
+    ready = false;
+    delay(1000);
+    while (digitalRead(RESET_PIN) == LOW)
+      delay(10);
   }
-  if (count==50)
-  {
-    To_mqtt_browser();
-    count=0;
-  }
-}
-void To_mqtt_browser()
-{
-  String temperature = "25";
-  String humidity = "60";
-  String soilMoisture = "35";
-  Serial.print("Acp");
-  Data_to_Json(temperature, humidity, soilMoisture);
-  client.publish(topic_pub, Buffer);
-}
-void MQTT_Connect()
-{
-  client.setServer(mqtt_broker, mqtt_port);
-  client.setCallback(callback);
-  while (!client.connected())
-  {
-    String client_id = "esp32-client-";
-    client_id += WiFi.macAddress();
-    Serial.printf("The client %s connects to the public mqtt broker\n", client_id.c_str());
 
-    if (client.connect(client_id.c_str(), mqtt_username, mqtt_password))
+  if (millis() - lastDHTRead >= dhtInterval)
+  {
+    lastDHTRead = millis();
+    float temp = dht.readTemperature();
+    float hum = dht.readHumidity();
+    DateTime now = rtc.now();
+
+    Serial.print("Thời gian: ");
+    Serial.print(now.hour());
+    Serial.print(":");
+    Serial.print(now.minute());
+    Serial.print(":");
+    Serial.println(now.second());
+
+    if (isnan(temp) || isnan(hum))
     {
-      Serial.println("Public emqx mqtt broker connected");
-      //MQTT_Pub_Sub();
+      Serial.println("Lỗi đọc DHT22!");
     }
     else
     {
-      Serial.print("Failed with state ");
-      Serial.println(client.state());
-      delay(2000);
+      Serial.print("Nhiệt độ: ");
+      Serial.print(temp);
+      Serial.print("°C  |  Độ ẩm: ");
+      Serial.print(hum);
+      Serial.println("%");
     }
   }
-}
-
-void MQTT_Pub_Sub()
-{
-  client.subscribe(topic_sub);
-}
-
-void Data_to_Json(String js_temp, String js_humi, String js_soil)
-{
-  data.clear();
-  data["temp"] = js_temp;
-  data["humi"] = js_humi;
-  data["soil"] = js_soil;
-  serializeJson(data, Buffer);
-}
-void Detext(String Str)
-{
-  deserializeJson(data, Str);
-  String sTemp = data["temp"].as<String>();
-  String sHumi = data["humi"].as<String>();
-  String sSoil = data["soil"].as<String>();
-  int val_Temp = sTemp.toInt();
-  int val_Humi = sHumi.toInt();
-  int val_Soil = sSoil.toInt();
-  Serial.println("Humi: " + String(val_Temp));
-  Serial.println("Temp: " + String(val_Humi));
-  Serial.println("Soil: " + String(val_Soil));
-}
-void callback(char *topic, byte *payload, unsigned int length)
-{
-  Serial.println("Message arrived in topic: ");
-  Serial.println(topic);
-  Serial.print("Message: ");
-  for (int i = 0; i < length; i++)
-  {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-  for (int i = 0; i < length; i++)
-  {
-    
-    Buffer[i] = (char)payload[i];
-  }
-  Buffer[length] = '\0';
-  Detext(Buffer);
 }

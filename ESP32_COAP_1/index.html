@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1 style="text-align: center;">Temperature Monitoring Chart</h1>
+    <div style="width: 80%; margin: 20px auto;">
+        <canvas id="temperatureChart"></canvas>
+    </div>
+    <p style="text-align: center;">
+        Data is updated in real-time. Ensure your server is running at 
+        <a href="http://192.168.1.124/ESP32_COAP_1/getdata.php" target="_blank">getdata.php</a>.
+    </p>
+
+    <script>
+        // Hàm fetch và vẽ biểu đồ
+        const fetchAndRenderChart = () => {
+            fetch('getdata.php')
+                .then(response => response.json())
+                .then(data => {
+                    const datetimes = data.map(item => item.datetime); // Trích xuất thời gian
+                    const tempc = data.map(item => item.tempc);          // Trích xuất nhiệt độ C
+                    const heartrate = data.map(item => item.heartrate);          // Trích xuất nhiệt độ F
+
+                    // Vẽ biểu đồ với Chart.js
+                    const ctx = document.getElementById('temperatureChart').getContext('2d');
+                    const chart = new Chart(ctx, {
+                        type: 'line', // Loại biểu đồ
+                        data: {
+                            labels: datetimes, // Gắn nhãn trục X
+                            datasets: [
+                                {
+                                    label: 'Temperature (°C)',
+                                    data: tempc,
+                                    borderColor: 'rgba(0, 128, 0, 1)',  // Màu xanh lục cho nhiệt độ C
+                                    backgroundColor: 'rgba(0, 128, 0, 0.2)',
+                                    fill: true
+                                },
+                                {
+                                    label: 'HeartRate (bpm)',
+                                    data: heartrate,
+                                    borderColor: 'rgba(255, 99, 132, 1)',  // Màu đỏ cho nhiệt độ F
+                                    backgroundColor: 'rgba(255, 99, 132, 0.2)', // Màu đỏ nhạt cho nhiệt độ F
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'datetime'
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Temperature'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        };
+
+        // Tự động làm mới mỗi 5 giây
+        setInterval(fetchAndRenderChart, 5000);
+        fetchAndRenderChart(); // Gọi ngay khi tải trang
+    </script>
+</body>
+</html>

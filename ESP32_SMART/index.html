@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHT22 & MQ2 Realtime Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1 style="text-align: center;">DHT22 & MQ2 Real-time Monitoring</h1>
+    <div style="width: 90%; margin: 30px auto;">
+        <canvas id="sensorChart"></canvas>
+    </div>
+    <p style="text-align: center;">
+        Data updates every 5 seconds. Source: 
+        <a href="getdata.php" target="_blank">getdata.php</a>
+    </p>
+
+    <script>
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // thời gian
+                datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        data: [],
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Humidity (%)',
+                        data: [],
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'MQ2 (ppm)',
+                        data: [],
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Timestamp'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Values'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function fetchAndRenderChart() {
+            fetch('getdata.php')
+                .then(response => response.json())
+                .then(data => {
+                    const labels = data.map(item => item.Time);
+                    const tempData = data.map(item => parseFloat(item.Temp));
+                    const humiData = data.map(item => parseFloat(item.Humi));
+                    const mq2Data = data.map(item => parseInt(item.Mq2));
+
+                    chart.data.labels = labels;
+                    chart.data.datasets[0].data = tempData;
+                    chart.data.datasets[1].data = humiData;
+                    chart.data.datasets[2].data = mq2Data;
+
+                    chart.update();
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Cập nhật mỗi 5 giây
+        setInterval(fetchAndRenderChart, 5000);
+        fetchAndRenderChart(); // Gọi lần đầu khi trang load
+    </script>
+</body>
+</html>
