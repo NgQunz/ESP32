@@ -10,7 +10,7 @@
 HardwareSerial dfSerial(1); // UART1 (RX=16, TX=17)
 DFRobotDFPlayerMini dfPlayer;
 
-// DS3231 RTC
+// DS1307 RTC
 RTC_DS1307 rtc;
 
 // HC12
@@ -87,17 +87,18 @@ void setup()
 
   if (!rtc.begin())
   {
-    Serial.println("Không tìm thấy DS3231");
+    Serial.println("Không tìm thấy DS1307");
     while (1)
       ;
   }
 
   if (!rtc.isrunning())
   {
-    Serial.println("DS3231 mất nguồn, thiết lập lại thời gian!");
+    Serial.println("DS1307 mất nguồn, thiết lập lại thời gian!");
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
   dfSerial.begin(9600, SERIAL_8N1, 16, 17); // RX=16, TX=17
   if (!dfPlayer.begin(dfSerial))
   {
@@ -126,7 +127,7 @@ void setup()
               // Kiểm tra thời gian hết hạn của "hello"
               if (ready && (millis() - lastHelloTime > helloTimeout)) {
                 ready = false;
-                Serial.println("Hết hạn 15 phút, cần gửi lại 'hello'");
+                Serial.println("Hết hạn 1 phút, cần gửi lại 'hello'");
               }
 
               if (cmd == "hello") {
