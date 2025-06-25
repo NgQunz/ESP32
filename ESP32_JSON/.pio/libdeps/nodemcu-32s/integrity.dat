@@ -1,5 +1,6 @@
-dfrobot/DFRobotDFPlayerMini@^1.0.6
-esphome/ESPAsyncWebServer-esphome@^3.3.0
 bblanchon/ArduinoJson@^7.4.1
 adafruit/DHT sensor library@^1.4.6
 adafruit/RTClib@^2.1.4
+dfrobot/DFRobotDFPlayerMini@^1.0.6
+tzapu/WiFiManager@^2.0.17
+esphome/ESPAsyncWebServer-esphome@^3.3.0

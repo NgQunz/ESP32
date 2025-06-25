@@ -29,27 +29,27 @@ void loop()
 
     Serial.println("Lệnh nhận: " + cmd);
 
-    if (cmd == "bat_den_1")
+    if (cmd == "bat_den_mot")
     {
       digitalWrite(RELAY1, HIGH);
     }
-    else if (cmd == "tat_den_1")
+    else if (cmd == "tat_den_mot")
     {
       digitalWrite(RELAY1, LOW);
     }
-    else if (cmd == "bat_den_2")
+    else if (cmd == "bat_den_hai")
     {
       digitalWrite(RELAY2, HIGH);
     }
-    else if (cmd == "tat_den_2")
+    else if (cmd == "tat_den_hai")
     {
       digitalWrite(RELAY2, LOW);
     }
-    else if (cmd == "bat_den_3")
+    else if (cmd == "bat_den_ba")
     {
       digitalWrite(RELAY3, HIGH);
     }
-    else if (cmd == "tat_den_3")
+    else if (cmd == "tat_den_ba")
     {
       digitalWrite(RELAY3, LOW);
     }

@@ -17,8 +17,8 @@ RTC_DS1307 rtc;
 HardwareSerial hc12(2); // UART2 (RX2: 27, TX2: 26)
 
 // WiFi Info
-const char *ssid = "102 Mini";
-const char *password = "khongchopass";
+const char *ssid = "P603";
+const char *password = "0904362626";
 
 // Relay pins
 #define RELAY4 23 // dao chieu
@@ -53,8 +53,8 @@ void setup()
   Serial.begin(115200);
   dht.begin();
 
-  IPAddress local_IP(192, 168, 1, 100); // Địa chỉ IP tĩnh
-  IPAddress gateway(192, 168, 1, 1);    // Gateway
+  IPAddress local_IP(192, 168, 0, 210); // Địa chỉ IP tĩnh
+  IPAddress gateway(192, 168, 0, 1);    // Gateway
   IPAddress subnet(255, 255, 255, 0);   // Subnet mask
   IPAddress primaryDNS(8, 8, 8, 8);     // DNS chính (Google)
   IPAddress secondaryDNS(8, 8, 4, 4);   // DNS phụ (Google)
@@ -112,17 +112,12 @@ void setup()
 
   hc12.begin(9600, SERIAL_8N1, 27, 26); // RX, TX
 
-  server.on("/relay", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-            {
-              DynamicJsonDocument doc(1024);
-              DeserializationError error = deserializeJson(doc, data);
-              if (error) {
-                request->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
-                return;
-              }
+  server.onNotFound([](AsyncWebServerRequest *request)
+                    {
+              String path = request->url().substring(1);  // Bỏ dấu '/'
+              Serial.println("GET command: " + path);
 
-              String cmd = doc["command"];
-              Serial.println("Received: " + cmd);
+              String cmd = path;
 
               // Kiểm tra thời gian hết hạn của "hello"
               if (ready && (millis() - lastHelloTime > helloTimeout)) {
@@ -130,7 +125,7 @@ void setup()
                 Serial.println("Hết hạn 1 phút, cần gửi lại 'hello'");
               }
 
-              if (cmd == "hello") {
+              if (cmd == "xin_chao") {
                 ready = true;
                 lastHelloTime = millis(); // Cập nhật thời gian nhận "hello"
                 dfPlayer.play(1);
@@ -150,7 +145,7 @@ void setup()
                 digitalWrite(RELAY3, LOW);
                 digitalWrite(RELAY4, LOW);
                 dfPlayer.play(7);
-              } else if (cmd == "nac_1") {
+              } else if (cmd == "bat_quat_so_mot") {
                 digitalWrite(RELAY1, HIGH);
                 digitalWrite(RELAY2, LOW);
                 digitalWrite(RELAY3, LOW);
@@ -159,17 +154,17 @@ void setup()
                 dfPlayer.play(20);
               } else if (cmd == "tinh_nho") {
                 dfPlayer.play(18);
-              } else if (cmd == "bac_bling") {
+              } else if (cmd == "bac_ninh") {
                 dfPlayer.play(19);
               } else if (cmd == "tat_nhac") {
                 dfPlayer.play(21);
               }
-              else if (cmd == "nac_2") {
+              else if (cmd == "bat_quat_so_hai") {
                 digitalWrite(RELAY2, HIGH);
                 digitalWrite(RELAY1, LOW);
                 digitalWrite(RELAY3, LOW);
                 dfPlayer.play(3);
-              } else if (cmd == "nac_3") {
+              } else if (cmd == "bat_quat_so_ba") {
                 digitalWrite(RELAY3, HIGH);
                 digitalWrite(RELAY1, LOW);
                 digitalWrite(RELAY2, LOW);
@@ -179,31 +174,32 @@ void setup()
                 dfPlayer.play(5);
               } else if (cmd == "tat_xoay") {
                 digitalWrite(RELAY4, LOW);
+                gioThoangActive = false;
                 dfPlayer.play(6);
-              } else if (cmd == "bat_den_1" || cmd == "bat_den_2" || cmd == "bat_den_3") {
+              } else if (cmd == "bat_den_mot" || cmd == "bat_den_mot" || cmd == "bat_den_mot") {
                 hc12.println(cmd);
-                if (cmd== "bat_den_1") {
+                if (cmd== "bat_den_mot") {
                   dfPlayer.play(13);
-                } else if (cmd == "bat_den_2") {
+                } else if (cmd == "bat_den_hai") {
                   dfPlayer.play(14);
-                } else if (cmd == "bat_den_3") {
+                } else if (cmd == "bat_den_ba") {
                   dfPlayer.play(8);
                 }
-              } else if (cmd == "tat_den_1" || cmd == "tat_den_2" || cmd == "tat_den_3") {
+              } else if (cmd == "tat_den_mot" || cmd == "tat_den_hai" || cmd == "tat_den_ba") {
                 hc12.println(cmd);
-                if (cmd == "tat_den_1") {
+                if (cmd == "tat_den_mot") {
                   dfPlayer.play(16);
-                } else if (cmd == "tat_den_2") {
+                } else if (cmd == "tat_den_hai") {
                   dfPlayer.play(15);
-                } else if (cmd == "tat_den_3") {
+                } else if (cmd == "tat_den_ba") {
                   dfPlayer.play(9);
                 }
               } else if (cmd == "gio_thoang") {
                 if (!gioThoangActive) {
                   // Lưu trạng thái hiện tại
-                  if (digitalRead(RELAY1)) previousFanState = "nac_1";
-                  else if (digitalRead(RELAY2)) previousFanState = "nac_2";
-                  else if (digitalRead(RELAY3)) previousFanState = "nac_3";
+                  if (digitalRead(RELAY1)) previousFanState = "bat_quat_so_mot";
+                  else if (digitalRead(RELAY2)) previousFanState = "bat_quat_so_hai";
+                  else if (digitalRead(RELAY3)) previousFanState = "bat_quat_so_ba";
                   else previousFanState = "tat_quat";
                   // Lưu trạng thái xoay
                   previousXoayState = digitalRead(RELAY4);
@@ -215,13 +211,13 @@ void setup()
                 }
               } else if (cmd == "tat_gio_thoang") {
                 gioThoangActive = false;
-                dfPlayer.play(11); 
+                dfPlayer.play(11);
                 // Phục hồi trạng thái quạt
-                if (previousFanState == "nac_1") {
+                if (previousFanState == "bat_quat_so_mot") {
                   digitalWrite(RELAY1, HIGH); digitalWrite(RELAY2, LOW); digitalWrite(RELAY3, LOW);
-                } else if (previousFanState == "nac_2") {
+                } else if (previousFanState == "bat_quat_so_hai") {
                   digitalWrite(RELAY2, HIGH); digitalWrite(RELAY1, LOW); digitalWrite(RELAY3, LOW);
-                } else if (previousFanState == "nac_3") {
+                } else if (previousFanState == "bat_quat_so_ba") {
                   digitalWrite(RELAY3, HIGH); digitalWrite(RELAY1, LOW); digitalWrite(RELAY2, LOW);
                 } else {
                   digitalWrite(RELAY1, LOW); digitalWrite(RELAY2, LOW); digitalWrite(RELAY3, LOW);
@@ -254,7 +250,7 @@ void setup()
 
                 helloTimeout = value * multiplier;
                 Serial.printf("Đã cập nhật helloTimeout = %lu ms\n", helloTimeout);
-                dfPlayer.play(17); 
+                dfPlayer.play(17);
                 request->send(200, "application/json", "{\"status\":\"Timeout updated\"}");
                 return;
               } else {
@@ -344,3 +340,63 @@ void loop()
     }
   }
 }
+
+// // // // // #include <WiFi.h>
+// // // // // #include <WiFiManager.h> // Cài qua Library Manager
+
+// // // // // // Cấu hình IP tĩnh
+// // // // // // Cấu hình IP tĩnh (không DNS tùy chỉnh)
+// // // // // IPAddress local_IP(192, 168, 0, 105);
+// // // // // IPAddress gateway(192, 168, 0, 1);
+// // // // // IPAddress subnet(255, 255, 255, 0);
+
+// // // // // void setup()
+// // // // // {
+// // // // //   Serial.begin(115200);
+
+// // // // //   WiFiManager wm;
+
+// // // // //   // Gán IP tĩnh trước khi bắt đầu
+// // // // //   wm.setSTAStaticIPConfig(local_IP, gateway, subnet);
+
+// // // // //   // Auto connect với SSID lưu sẵn, nếu không sẽ mở AP cấu hình
+// // // // //   if (!wm.autoConnect("ESP32_Config", "12345678"))
+// // // // //   {
+// // // // //     Serial.println("Không kết nối được WiFi, khởi động lại...");
+// // // // //     wm.resetSettings();
+// // // // //     delay(3000);
+// // // // //     ESP.restart();
+// // // // //   }
+
+// // // // //   Serial.println("Đã kết nối WiFi!");
+// // // // //   Serial.print("IP: ");
+// // // // //   Serial.println(WiFi.localIP());
+// // // // // }
+
+// // #include <WiFi.h>
+
+// // const char *ssid = "Quan";          // Thay bằng tên WiFi mới
+// // const char *password = "02112004@"; // Thay bằng mật khẩu WiFi
+
+// // void setup()
+// // {
+// //     Serial.begin(115200);
+
+// //     WiFi.begin(ssid, password);
+// //     Serial.print("Dang ket noi WiFi");
+
+// //     while (WiFi.status() != WL_CONNECTED)
+// //     {
+// //         delay(500);
+// //         Serial.print(".");
+// //     }
+
+// //     Serial.println();
+// //     Serial.println("Da ket noi WiFi!");
+// //     Serial.print("Dia chi IP: ");
+// //     Serial.println(WiFi.localIP());
+// // }
+// // void loop()
+// // {
+// //     // ...
+// // }
