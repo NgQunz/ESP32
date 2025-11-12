@@ -67,7 +67,7 @@ if len(numbers) >= 3:
     print("\n🩺 Kết quả đo được:")
     print(f"SYS (mmHg): {sys_val}")
     print(f"DIA (mmHg): {dia_val}")
-    print(f"PULSE (/min): {pulse_val}")x
+    print(f"PULSE (/min): {pulse_val}")
 else:
     print("⚠️ Không đủ dữ liệu số.")
 # ===== 7. XÓA FILE TRÊN DRIVE SAU KHI HOÀN TẤT =====
