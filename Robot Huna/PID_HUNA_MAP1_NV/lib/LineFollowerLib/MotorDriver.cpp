@@ -42,6 +42,25 @@ void MotorDriver::setSpeed(int leftSpeed, int rightSpeed)
 
 void MotorDriver::move(int leftSpeed, int rightSpeed, unsigned long duration)
 {
+  // int speed = 30;
+  // if (leftSpeed > 0)
+  // {
+  //   leftSpeed = leftSpeed - speed; // dương → giảm
+  // }
+  // else
+  // {
+  //   leftSpeed = leftSpeed + speed; // âm → tăng
+  // }
+
+  // if (rightSpeed > 0)
+  // {
+  //   rightSpeed = rightSpeed - speed; // dương → giảm
+  // }
+  // else
+  // {
+  //   rightSpeed = rightSpeed + speed; // âm → tăng
+  // }
+
   setSpeed(rightSpeed, leftSpeed);
 
   if (duration > 0)

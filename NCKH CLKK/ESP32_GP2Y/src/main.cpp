@@ -1,104 +1,70 @@
 #include <Arduino.h>
 
-int measurePin = 33;
-int ledPower = 13;
+// ===== GP2Y1010AU0F Pins =====
+#define GP2Y_LED 13 // LED driver pin
+#define GP2Y_ADC 33 // Analog input pin (ESP32 ADC)
 
+// ===== GP2Y Timings =====
 int samplingTime = 280;
 int deltaTime = 40;
 int sleepTime = 9680;
 
+// ===== Variables =====
 float voMeasured = 0;
 float calcVoltage = 0;
 float dustDensity = 0;
 
+void GP2Y_setup()
+{
+  pinMode(GP2Y_LED, OUTPUT);
+  digitalWrite(GP2Y_LED, HIGH); // LED OFF (active LOW)
+}
+
+// ===== Hàm đọc bụi GP2Y =====
+// Trả về: µg/m³
+float Run_GP2Y()
+{
+  long sum = 0;
+
+  for (int i = 0; i < 100; i++)
+  {
+    digitalWrite(GP2Y_LED, LOW);
+    delayMicroseconds(samplingTime);
+
+    voMeasured = analogRead(GP2Y_ADC);
+
+    delayMicroseconds(deltaTime);
+    digitalWrite(GP2Y_LED, HIGH);
+    delayMicroseconds(sleepTime);
+
+    calcVoltage = voMeasured * (5.0 / 1024.0); // nếu ESP32 thì đổi 1024 → 4095 và 5.0 → 3.3
+    dustDensity = 0.17 * calcVoltage - 0.1;
+
+    sum += dustDensity;
+    delay(100);
+  }
+
+  float avgDust = (float)sum / 100.0; // mg/m³
+  float ugm3 = avgDust * 1000.0;      // μg/m³
+
+  return ugm3;
+}
+
 void setup()
 {
   Serial.begin(9600);
-  pinMode(ledPower, OUTPUT);
+  GP2Y_setup();
+
+  Serial.println("GP2Y1010AU0F Dust Sensor Started");
 }
 
 void loop()
 {
-  float sum = 0;
+  float dust_ug = Run_GP2Y();
 
-  // Đo 10 lần rồi tính trung bình
-  for (int i = 0; i < 100; i++)
-  {
-    digitalWrite(ledPower, LOW);
-    delayMicroseconds(samplingTime);
-    sum += analogRead(measurePin);
-    delayMicroseconds(deltaTime);
-    digitalWrite(ledPower, HIGH);
-    delayMicroseconds(sleepTime);
-    delay(100);
-  }
+  Serial.print("Dust: ");
+  Serial.print(dust_ug, 1);
+  Serial.println(" ug/m3");
 
-  voMeasured = sum / 100.0; // giá trị trung bình ADC
-
-  // Nếu ESP32: 12-bit ADC → chia 4095, nếu Arduino: 10-bit → chia 1024
-  calcVoltage = voMeasured * (5.0 / 1024.0);
-
-  dustDensity = 0.17 * calcVoltage - 0.1; // mg/m³
-  // if (dustDensity > 0)
-  // {
-  float dustDensity_ug = dustDensity * 1000; // µg/m³
-                                             // if (dustDensity > 0)
-                                             // {
-
-  Serial.print("ADC Avg: ");
-  Serial.print(voMeasured);
-  Serial.print(" | Voltage: ");
-  Serial.print(calcVoltage, 3);
-  Serial.print(" V | Dust: ");
-  Serial.print(dustDensity, 3);
-  Serial.print(" mg/m³ (");
-  Serial.print(dustDensity_ug, 1);
-  Serial.println(" µg/m³)");
-  delay(1000);
-  //}
+  delay(2000);
 }
-// #include <Arduino.h>
-
-// int measurePin = 27;
-// int ledPower = 13;
-
-// int samplingTime = 280;
-// int deltaTime = 40;
-// int sleepTime = 9680;
-
-// float voMeasured = 0;
-// float calcVoltage = 0;
-// float dustDensity = 0;
-
-// void setup()
-// {
-//   Serial.begin(9600);
-//   pinMode(ledPower, OUTPUT);
-// }
-
-// void loop()
-// {
-//   float sumDust = 0;
-
-//   for (int i = 0; i < 10; i++)
-//   {
-//     digitalWrite(ledPower, LOW);
-//     delayMicroseconds(samplingTime);
-//     voMeasured = analogRead(measurePin);
-//     delayMicroseconds(deltaTime);
-//     digitalWrite(ledPower, HIGH);
-//     delayMicroseconds(sleepTime);
-
-//     calcVoltage = voMeasured * (5.0 / 1024.0);
-//     dustDensity = 0.17 * calcVoltage - 0.1;
-
-//     sumDust += dustDensity;
-//     delay(100);
-//   }
-
-//   float avgDust = sumDust / 10.0;
-
-//   Serial.print("Dust Density Avg (mg/m3): ");
-//   Serial.println(avgDust);
-//   delay(1000);
-// }

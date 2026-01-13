@@ -1,0 +1,28 @@
+2025-11-17 02:46:47,786 INFO: Air monitor started. Polling Firebase at https://nckh-clkk-default-rtdb.asia-southeast1.firebasedatabase.app/sensor_data every 60s
+2025-11-17 02:46:48,414 INFO: Fetched 443 rows, latest: 2025-11-17 02:39:04
+2025-11-17 02:46:49,669 INFO: Anomaly detection latest=False score=9.505 (1=outlier)
+2025-11-17 02:46:50,273 INFO: Chain [1] start processing
+2025-11-17 02:46:50,700 INFO: Chain [1] done processing
+2025-11-17 02:46:50,806 INFO: Chain [1] start processing
+2025-11-17 02:46:50,980 INFO: Chain [1] done processing
+2025-11-17 02:46:51,069 INFO: Chain [1] start processing
+2025-11-17 02:46:51,201 INFO: Chain [1] done processing
+2025-11-17 02:46:51,299 INFO: Chain [1] start processing
+2025-11-17 02:46:51,507 INFO: Chain [1] done processing
+2025-11-17 02:46:51,599 INFO: Chain [1] start processing
+2025-11-17 02:46:51,814 INFO: Chain [1] done processing
+2025-11-17 02:46:51,871 INFO: Saved forecast to D:\ESP32\NCKH CLKK\ESP32_CLKK_GHEP\air_outputs\forecast_latest.csv
+2025-11-17 02:46:51,872 INFO: Telegram not configured, skipping.
+2025-11-17 02:47:52,693 INFO: Fetched 443 rows, latest: 2025-11-17 02:39:04
+2025-11-17 02:47:52,697 INFO: Anomaly detection latest=False score=9.505 (1=outlier)
+2025-11-17 02:47:52,799 INFO: Chain [1] start processing
+2025-11-17 02:47:53,164 INFO: Chain [1] done processing
+2025-11-17 02:47:53,327 INFO: Chain [1] start processing
+2025-11-17 02:47:53,584 INFO: Chain [1] done processing
+2025-11-17 02:47:53,709 INFO: Chain [1] start processing
+2025-11-17 02:47:53,898 INFO: Chain [1] done processing
+2025-11-17 02:47:54,054 INFO: Chain [1] start processing
+2025-11-17 02:47:54,518 INFO: Chain [1] done processing
+2025-11-17 02:47:54,700 INFO: Chain [1] start processing
+2025-11-17 02:47:55,060 INFO: Chain [1] done processing
+2025-11-17 02:47:55,131 INFO: Saved forecast to D:\ESP32\NCKH CLKK\ESP32_CLKK_GHEP\air_outputs\forecast_latest.csv

@@ -9,5 +9,6 @@ void setup()
 
 void loop()
 {
-  Nhiemvu4();
+  Nhiemvu3();
+  delay(2000);
 }

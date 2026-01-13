@@ -24,6 +24,8 @@ void Nhiemvu1_5()
 
 void Nhiemvu3()
 {
+    servo2.write(maxAngle);
+    delay(5000);
     for (int angle = maxAngle; angle >= minAngle2; angle--)
     {
         servo2.write(angle);

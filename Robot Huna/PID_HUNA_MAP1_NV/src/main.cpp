@@ -347,7 +347,7 @@ void mission1()
   pid.setEnabled(false);
   motor.move(40, 65, 350);
   delay(200);
-  motor.move(140, -130, 330);
+  motor.move(140, -130, 350);
   motor.stop();
   delay(300);
 
@@ -407,12 +407,9 @@ void mission1()
   }
 
   // Dừng 3 giây
-  Serial.println(F("→ STOPPING for 3000ms"));
   pid.setEnabled(false);
-  motor.stop();
-  buzzer.success();
-  delay(2000);
-
+  Nhiemvu1();
+  delay(3000);
   Serial.println(F("\n✅ MISSION 1 COMPLETE!\n"));
 }
 
@@ -425,13 +422,14 @@ void mission2()
   // Quay ngược xe lại
   Serial.println(F("→ Reversing robot"));
   pid.setEnabled(false);
-  motor.move(-180, 200, 520); // quay ngược xe 180 độ
+  motor.move(-180, 200, 560); // quay ngược xe 180 độ
   motor.stop();
   delay(300);
-  motor.move(-80, -120, 300); // lùi 1 chút
+  motor.move(-100, -120, 450); // lùi 1 chút
   motor.stop();
   delay(300);
-
+  Reset_lentren();
+  delay(300);
   // VÒNG WHILE 4: Dò line đến 0b00111
   Serial.println(F("\n--- TASK 4: Follow line until 0b00111 ---"));
   pid.setEnabled(true);
@@ -462,7 +460,7 @@ void mission2()
   pid.setEnabled(false);
   motor.move(40, 60, 300);
   delay(200);
-  motor.move(140, -130, 330);
+  motor.move(140, -130, 200);
   motor.stop();
   delay(300);
 
@@ -499,7 +497,7 @@ void mission2()
   motor.move(40, 65, 450);
   motor.stop();
   delay(500);
-  motor.move(140, -130, 330);
+  motor.move(140, -130, 450);
 
   motor.stop();
   delay(300);
@@ -527,7 +525,7 @@ void mission3()
 
   // Quay trái
   Serial.println(F("→ Turning LEFT"));
-  motor.move(-130, 140, 300);
+  motor.move(-130, 140, 320);
   motor.stop();
   delay(300);
 
@@ -558,7 +556,7 @@ void mission3()
   // Tiến và rẽ phải
   Serial.println(F("→ Moving forward then turn RIGHT"));
   pid.setEnabled(false);
-  motor.move(40, 60, 350);
+  motor.move(50, 70, 350);
   delay(200);
 
   motor.move(140, -135, 300);
@@ -595,7 +593,7 @@ void mission3()
   pid.setEnabled(false);
   motor.move(40, 60, 400);
   delay(200);
-  motor.move(140, -135, 330);
+  motor.move(140, -135, 430);
   motor.stop();
   delay(300);
 
@@ -628,6 +626,7 @@ void mission3()
   Serial.println(F("→ STOPPING for 3000ms"));
   pid.setEnabled(false);
   motor.stop();
+  Nhiemvu3();
   buzzer.success();
   delay(2000);
 
@@ -645,7 +644,7 @@ void mission4()
   // Quay 180 độ (tham khảo Mission 2)
   Serial.println(F("→ Rotating 180 degrees"));
   pid.setEnabled(false);
-  motor.move(-150, 150, 520); // Quay 180° (giống Mission 2)
+  motor.move(-230, 250, 720); // Quay 180° (giống Mission 2)
   motor.stop();
   delay(300);
 
@@ -713,6 +712,7 @@ void mission4()
   pid.setEnabled(false);
   motor.stop();
   buzzer.success();
+  Nhiemvu4();
   delay(2000);
 
   Serial.println(F("\n========================================"));
@@ -733,7 +733,10 @@ void mission5()
   // Quay 180 do
   Serial.println(F("-> Rotating 180 degrees"));
   pid.setEnabled(false);
-  motor.move(-150, 150, 520);
+  motor.move(-40, -40, 800);
+  delay(200);
+  motor.stop();
+  motor.move(-230, 250, 550); // Quay 180° (giống Mission 2)
   motor.stop();
   delay(300);
 
@@ -767,7 +770,7 @@ void mission5()
   pid.setEnabled(false);
   motor.move(40, 65, 350);
   delay(200);
-  motor.move(150, -130, 310);
+  motor.move(150, -130, 280);
   motor.stop();
   delay(300);
 
@@ -799,8 +802,10 @@ void mission5()
   // Dung va delay 3 giay
   Serial.println(F("-> STOPPING for 3000ms"));
   pid.setEnabled(false);
+  Nhiemvu5();
   motor.stop();
   buzzer.success();
+
   delay(2000);
 
   Serial.println(F("\n========================================"));
@@ -821,10 +826,11 @@ void mission6()
   // Quay 180 do
   Serial.println(F("-> Rotating 180 degrees"));
   pid.setEnabled(false);
-  motor.move(-150, 150, 520);
+  motor.move(-230, 250, 460); // Quay 180° (giống Mission 2)
   motor.stop();
   delay(300);
-
+  Reset_lentren();
+  delay(300);
   // VONG WHILE 13: Do line den 0b11111
   Serial.println(F("\n--- TASK 13: Follow line until 0b11111 ---"));
   pid.setEnabled(true);
@@ -855,7 +861,7 @@ void mission6()
   pid.setEnabled(false);
   motor.move(40, 65, 300);
   delay(200);
-  motor.move(150, -130, 310);
+  motor.move(150, -130, 250);
   motor.stop();
   delay(300);
 
@@ -889,7 +895,7 @@ void mission6()
   pid.setEnabled(false);
   motor.move(40, 60, 300);
   delay(200);
-  motor.move(150, -130, 310);
+  motor.move(150, -130, 250);
   motor.stop();
   delay(300);
 
@@ -923,7 +929,7 @@ void mission6()
   pid.setEnabled(false);
   motor.move(50, 60, 330);
   delay(200);
-  motor.move(-150, 140, 300); // Quay trai (nguoc voi quay phai)
+  motor.move(-150, 140, 250); // Quay trai (nguoc voi quay phai)
   motor.stop();
   delay(300);
 
@@ -957,8 +963,9 @@ void mission6()
   pid.setEnabled(false);
   motor.move(40, 60, 350);
   delay(200);
-  motor.move(140, -130, 340); // Quay phai
+  motor.move(140, -130, 200); // Quay phai
   motor.stop();
+  Nhiemvu6();
   delay(2000); // Delay 3 giay
 
   Serial.println(F("\n========================================"));
@@ -971,19 +978,6 @@ void mission7()
   Serial.println(F("\n========================================"));
   Serial.println(F("STARTING MISSION 7"));
   Serial.println(F("========================================\n"));
-
-  // Lui 1 chut (giong mission 3)
-  Serial.println(F("-> Reversing"));
-  pid.setEnabled(false);
-  motor.move(-70, -100, 350);
-  motor.stop();
-  delay(200);
-
-  // Quay trai
-  Serial.println(F("-> Turning LEFT"));
-  motor.move(-140, 150, 300);
-  motor.stop();
-  delay(300);
 
   // VONG WHILE 17: Do line den 0b11111
   Serial.println(F("\n--- TASK 17: Follow line until 0b11111 ---"));
@@ -1212,11 +1206,10 @@ void loop()
   Serial.println(F("\n========================================"));
   Serial.println(F("🚀 STARTING ALL MISSIONS"));
   Serial.println(F("========================================\n"));
-
-  mission1();
-  mission2();
-  mission3();
-  mission4();
+  // mission1();
+  // mission2();
+  // mission3();
+  // mission4();
   mission5();
   mission6();
   mission7();
