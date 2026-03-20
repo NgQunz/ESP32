@@ -41,8 +41,13 @@ def preprocess_image(image_path):
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     
     # Threshold để tách số ra khỏi nền
-    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    
+    thresh = cv2.adaptiveThreshold(
+    blurred, 255,
+    cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    cv2.THRESH_BINARY_INV,
+    31,   # blockSize (phải lẻ): 21/31/41...
+    5     # C: 2..10 tùy ảnh
+)   
     return img, thresh
 
 def find_digit_contours(thresh):
